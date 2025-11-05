@@ -3,10 +3,15 @@ import nodemailer from 'nodemailer'
 // Create transporter
 const createTransporter = () => {
   return nodemailer.createTransporter({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
     auth: {
       user: process.env.EMAIL_USER || '231fa04f98@gmail.com',
       pass: process.env.EMAIL_PASS || 'xdcn fgvb iweg tcxl'
+    },
+    tls: {
+      rejectUnauthorized: false
     }
   })
 }
@@ -14,6 +19,12 @@ const createTransporter = () => {
 // Send appointment confirmation email
 export const sendAppointmentConfirmation = async (patientEmail, appointmentData) => {
   try {
+    console.log('Attempting to send appointment confirmation email to:', patientEmail)
+    
+    if (!patientEmail || !appointmentData) {
+      throw new Error('Missing email or appointment data')
+    }
+    
     const transporter = createTransporter()
     
     const mailOptions = {
@@ -44,10 +55,17 @@ export const sendAppointmentConfirmation = async (patientEmail, appointmentData)
       `
     }
 
-    await transporter.sendMail(mailOptions)
-    console.log('Appointment confirmation email sent successfully')
+    const result = await transporter.sendMail(mailOptions)
+    console.log('Appointment confirmation email sent successfully:', result.messageId)
+    return result
   } catch (error) {
-    console.error('Error sending appointment confirmation email:', error)
+    console.error('Error sending appointment confirmation email:', {
+      error: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response
+    })
+    throw error
   }
 }
 
@@ -134,6 +152,12 @@ export const sendAppointmentStatusUpdate = async (patientEmail, appointmentData)
 // Send welcome email after registration
 export const sendWelcomeEmail = async (userEmail, userData) => {
   try {
+    console.log('Attempting to send welcome email to:', userEmail)
+    
+    if (!userEmail || !userData) {
+      throw new Error('Missing email or user data')
+    }
+    
     const transporter = createTransporter()
     
     const mailOptions = {
@@ -187,9 +211,16 @@ export const sendWelcomeEmail = async (userEmail, userData) => {
       `
     }
 
-    await transporter.sendMail(mailOptions)
-    console.log('Welcome email sent successfully')
+    const result = await transporter.sendMail(mailOptions)
+    console.log('Welcome email sent successfully:', result.messageId)
+    return result
   } catch (error) {
-    console.error('Error sending welcome email:', error)
+    console.error('Error sending welcome email:', {
+      error: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response
+    })
+    throw error
   }
 }

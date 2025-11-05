@@ -168,7 +168,8 @@ router.post('/', authenticateToken, validateAppointment, validateRequest, async 
 
     // Send confirmation email to patient
     try {
-      await sendAppointmentConfirmation(appointment.patient.email, {
+      console.log('Sending appointment confirmation email to:', appointment.patient.email)
+      const emailResult = await sendAppointmentConfirmation(appointment.patient.email, {
         patientName: appointment.patient.name,
         doctorName: appointment.doctor.name,
         specialization: appointment.doctor.specialization,
@@ -177,8 +178,13 @@ router.post('/', authenticateToken, validateAppointment, validateRequest, async 
         symptoms: appointment.symptoms,
         status: appointment.status
       })
+      console.log('Appointment email sent successfully:', emailResult.messageId)
     } catch (emailError) {
-      console.error('Email sending failed:', emailError)
+      console.error('Email sending failed:', {
+        error: emailError.message,
+        patientEmail: appointment.patient.email,
+        appointmentId: appointment._id
+      })
     }
 
     res.status(201).json({

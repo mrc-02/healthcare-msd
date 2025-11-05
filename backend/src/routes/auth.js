@@ -141,13 +141,19 @@ router.post('/register', async (req, res, next) => {
 
     // Send welcome email
     try {
-      await sendWelcomeEmail(user.email, {
+      console.log('Sending welcome email to:', user.email)
+      const emailResult = await sendWelcomeEmail(user.email, {
         name: user.name,
         email: user.email,
         role: user.role
       })
+      console.log('Welcome email sent successfully:', emailResult.messageId)
     } catch (emailError) {
-      console.error('Welcome email sending failed:', emailError)
+      console.error('Welcome email sending failed:', {
+        error: emailError.message,
+        userEmail: user.email,
+        userId: user._id
+      })
     }
 
     res.status(201).json({

@@ -15,6 +15,7 @@ import medicineRoutes from './src/routes/medicines.js'
 import notificationRoutes from './src/routes/notifications.js'
 import demoRoutes from './src/routes/demo.js'
 import mockAuthRoutes from './src/routes/mockAuth.js'
+import testRoutes from './src/routes/test.js'
 
 import { errorHandler } from './src/middleware/errorHandler.js'
 import { handleDBError } from './src/middleware/demoHandler.js'
@@ -119,6 +120,7 @@ app.use('/api/users', limiter, userRoutes)
 app.use('/api/appointments', limiter, appointmentRoutes)
 app.use('/api/medicines', limiter, medicineRoutes)
 app.use('/api/notifications', limiter, notificationRoutes)
+app.use('/api/test', testRoutes)
 
 // Database error handler
 app.use(handleDBError)
