@@ -1,16 +1,19 @@
 import nodemailer from 'nodemailer'
 
+// Email configuration
+const emailConfig = {
+  service: 'gmail',
+  auth: {
+    user: '231fa04f98@gmail.com',
+    pass: 'xdcnfgvbiegtcxl'
+  }
+}
+
 // Test email configuration
 export const testEmailConfig = async () => {
   try {
-    const transporter = nodemailer.createTransporter({
-      service: 'gmail',
-      auth: {
-        user: '231fa04f98@gmail.com',
-        pass: 'xdcnfgvbiegtcxl'
-      }
-    })
-    
+    console.log('Testing email config with nodemailer version:', nodemailer.version || 'unknown')
+    const transporter = nodemailer.createTransporter(emailConfig)
     const result = await transporter.verify()
     console.log('Email configuration is valid:', result)
     return result
@@ -18,17 +21,6 @@ export const testEmailConfig = async () => {
     console.error('Email configuration error:', error)
     throw error
   }
-}
-
-// Create transporter
-const createTransporter = () => {
-  return nodemailer.createTransporter({
-    service: 'gmail',
-    auth: {
-      user: '231fa04f98@gmail.com',
-      pass: 'xdcnfgvbiegtcxl' // App password without spaces
-    }
-  })
 }
 
 // Send appointment confirmation email
@@ -40,7 +32,7 @@ export const sendAppointmentConfirmation = async (patientEmail, appointmentData)
       throw new Error('Missing email or appointment data')
     }
     
-    const transporter = createTransporter()
+    const transporter = nodemailer.createTransporter(emailConfig)
     
     const mailOptions = {
       from: '231fa04f98@gmail.com',
@@ -87,7 +79,7 @@ export const sendAppointmentConfirmation = async (patientEmail, appointmentData)
 // Send appointment cancellation email
 export const sendAppointmentCancellation = async (patientEmail, appointmentData) => {
   try {
-    const transporter = createTransporter()
+    const transporter = nodemailer.createTransporter(emailConfig)
     
     const mailOptions = {
       from: process.env.EMAIL_USER || '231fa04f98@gmail.com',
@@ -123,7 +115,7 @@ export const sendAppointmentCancellation = async (patientEmail, appointmentData)
 // Send appointment status update email
 export const sendAppointmentStatusUpdate = async (patientEmail, appointmentData) => {
   try {
-    const transporter = createTransporter()
+    const transporter = nodemailer.createTransporter(emailConfig)
     
     const statusColors = {
       confirmed: '#059669',
@@ -168,12 +160,13 @@ export const sendAppointmentStatusUpdate = async (patientEmail, appointmentData)
 export const sendWelcomeEmail = async (userEmail, userData) => {
   try {
     console.log('Attempting to send welcome email to:', userEmail)
+    console.log('Nodemailer object:', typeof nodemailer, Object.keys(nodemailer))
     
     if (!userEmail || !userData) {
       throw new Error('Missing email or user data')
     }
     
-    const transporter = createTransporter()
+    const transporter = nodemailer.createTransporter(emailConfig)
     
     const mailOptions = {
       from: '231fa04f98@gmail.com',
