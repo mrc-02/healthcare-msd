@@ -120,53 +120,32 @@ const DoctorDashboard = () => {
     }
   }, [user])
 
-  // Initialize metrics on first load
+  // Update stats with real data
   useEffect(() => {
-    if (isFirstLoad) {
-      // Keep metrics at 0 for first login
-      setLivePatientMetrics({
-        activePatients: 0,
-        newPatients: 0,
-        followUpRequired: 0,
-        emergencyCases: 0
-      })
-      
-      // Set flag to false after 5 seconds to start live updates
-      const timer = setTimeout(() => {
-        setIsFirstLoad(false)
-      }, 5000)
-      
-      return () => clearTimeout(timer)
-    }
-  }, [isFirstLoad])
+    setLiveStats({
+      totalPatients: patients.length,
+      todayAppointments: appointments.filter(apt => isToday(new Date(apt.date))).length,
+      pendingAppointments: appointments.filter(apt => apt.status === 'pending').length,
+      completedAppointments: appointments.filter(apt => apt.status === 'completed').length,
+      monthlyEarnings: appointments.filter(apt => apt.status === 'completed').length * 150, // $150 per completed appointment
+      averageRating: 4.8,
+      responseTime: '2.5 min',
+      patientSatisfaction: 96
+    })
 
-  // Simulate live stats updates (only after first load)
-  useEffect(() => {
-    if (isFirstLoad) return
-    
-    const interval = setInterval(() => {
-      setLiveStats(prev => ({
-        ...prev,
-        totalPatients: patients.length + Math.floor(Math.random() * 5),
-        todayAppointments: appointments.filter(apt => isToday(new Date(apt.date))).length,
-        pendingAppointments: appointments.filter(apt => apt.status === 'pending').length,
-        completedAppointments: appointments.filter(apt => apt.status === 'completed').length,
-        monthlyEarnings: prev.monthlyEarnings + Math.floor(Math.random() * 1000),
-        responseTime: `${(Math.random() * 2 + 1).toFixed(1)} min`,
-        patientSatisfaction: Math.floor(Math.random() * 5) + 94
-      }))
-
-      setLivePatientMetrics(prev => ({
-        ...prev,
-        activePatients: Math.floor(Math.random() * 10) + 15,
-        newPatients: Math.floor(Math.random() * 3) + 2,
-        followUpRequired: Math.floor(Math.random() * 5) + 3,
-        emergencyCases: Math.floor(Math.random() * 2)
-      }))
-    }, 10000) // Update every 10 seconds
-
-    return () => clearInterval(interval)
-  }, [appointments, patients, isFirstLoad])
+    setLivePatientMetrics({
+      activePatients: patients.filter(p => p.isActive !== false).length,
+      newPatients: patients.filter(p => {
+        const createdDate = new Date(p.createdAt)
+        const today = new Date()
+        const diffTime = Math.abs(today - createdDate)
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        return diffDays <= 7 // New patients in last 7 days
+      }).length,
+      followUpRequired: appointments.filter(apt => apt.status === 'completed' && !apt.followUpCompleted).length,
+      emergencyCases: appointments.filter(apt => apt.urgency === 'urgent').length
+    })
+  }, [appointments, patients])
 
   const addRealtimeUpdate = (message) => {
     setRealtimeUpdates(prev => [

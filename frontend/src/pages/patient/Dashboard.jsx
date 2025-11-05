@@ -167,48 +167,20 @@ const PatientDashboard = () => {
     }
   }, [user])
 
-  // Initialize metrics on first load
+  // Use real health data from user profile or set to 0 if not available
   useEffect(() => {
-    if (isFirstLoad) {
-      // Keep metrics at 0 for first login
-      setLiveStats({
-        heartRate: 0,
-        bloodPressure: '0/0',
-        temperature: 0,
-        oxygenLevel: 0,
-        steps: 0,
-        calories: 0,
-        sleepHours: 0,
-        waterIntake: 0
-      })
-      
-      // Set flag to false after 5 seconds to start live updates
-      const timer = setTimeout(() => {
-        setIsFirstLoad(false)
-      }, 5000)
-      
-      return () => clearTimeout(timer)
-    }
-  }, [isFirstLoad])
-
-  // Simulate live health metrics (only after first load)
-  useEffect(() => {
-    if (isFirstLoad) return
-    
-    const interval = setInterval(() => {
-      setLiveStats(prev => ({
-        ...prev,
-        heartRate: Math.floor(Math.random() * 20) + 65, // 65-85
-        bloodPressure: `${Math.floor(Math.random() * 20) + 110}/${Math.floor(Math.random() * 10) + 70}`,
-        temperature: (Math.random() * 2 + 97.5).toFixed(1),
-        oxygenLevel: Math.floor(Math.random() * 5) + 95, // 95-100
-        steps: prev.steps + Math.floor(Math.random() * 10),
-        calories: prev.calories + Math.floor(Math.random() * 5)
-      }))
-    }, 5000) // Update every 5 seconds
-
-    return () => clearInterval(interval)
-  }, [isFirstLoad])
+    const healthData = user?.healthMetrics || {}
+    setLiveStats({
+      heartRate: healthData.heartRate || 0,
+      bloodPressure: healthData.bloodPressure || '0/0',
+      temperature: healthData.temperature || 0,
+      oxygenLevel: healthData.oxygenLevel || 0,
+      steps: healthData.steps || 0,
+      calories: healthData.calories || 0,
+      sleepHours: healthData.sleepHours || 0,
+      waterIntake: healthData.waterIntake || 0
+    })
+  }, [user])
 
   const addRealtimeUpdate = (message) => {
     setRealtimeUpdates(prev => [

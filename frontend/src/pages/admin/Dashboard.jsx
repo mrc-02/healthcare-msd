@@ -1,32 +1,50 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Users, Calendar, Package, DollarSign, TrendingUp, TrendingDown, Activity, AlertCircle } from 'lucide-react'
+import { useUsers, useAppointments, useMedicines, useNotifications } from '../../hooks'
+import { isToday, format } from 'date-fns'
 
 const AdminDashboard = () => {
+  const { data: usersData } = useUsers()
+  const { data: appointmentsData } = useAppointments()
+  const { data: medicinesData } = useMedicines()
+  const { data: notificationsData } = useNotifications()
+
+  const users = usersData?.data?.users || []
+  const appointments = appointmentsData?.data?.appointments || []
+  const medicines = medicinesData?.data?.medicines || []
+  const notifications = notificationsData?.data?.notifications || []
+
   const stats = [
     {
       icon: Users,
       label: 'Total Users',
-      value: '12,845',
-      change: '+12.5%',
+      value: users.length.toString(),
+      change: '+0%',
       trend: 'up',
       color: 'bg-blue-500',
-      subtext: '156 new this week'
+      subtext: `${users.filter(u => {
+        const createdDate = new Date(u.createdAt)
+        const today = new Date()
+        const diffTime = Math.abs(today - createdDate)
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        return diffDays <= 7
+      }).length} new this week`
     },
     {
       icon: Calendar,
       label: 'Total Appointments',
-      value: '8,432',
-      change: '+8.2%',
+      value: appointments.length.toString(),
+      change: '+0%',
       trend: 'up',
       color: 'bg-green-500',
-      subtext: '342 today'
+      subtext: `${appointments.filter(apt => isToday(new Date(apt.date))).length} today`
     },
     {
       icon: Package,
       label: 'Medicines Tracked',
-      value: '45,231',
-      change: '+15.3%',
+      value: medicines.length.toString(),
+      change: '+0%',
       trend: 'up',
       color: 'bg-purple-500',
       subtext: 'In supply chain'
@@ -34,39 +52,53 @@ const AdminDashboard = () => {
     {
       icon: DollarSign,
       label: 'Total Revenue',
-      value: '₹22,48,500',
-      change: '+22.1%',
+      value: `₹${(appointments.filter(apt => apt.status === 'completed').length * 150).toLocaleString()}`,
+      change: '+0%',
       trend: 'up',
       color: 'bg-orange-500',
       subtext: 'This month'
     }
   ]
 
-  const recentUsers = [
-    { name: 'Rahul Verma', email: 'rahul.verma@gmail.com', role: 'Patient', joinDate: '2 hours ago', status: 'Active' },
-    { name: 'Dr. Priya Sharma', email: 'priya.sharma@nrihospital.com', role: 'Doctor', joinDate: '5 hours ago', status: 'Active' },
-    { name: 'Sneha Reddy', email: 'sneha.reddy@gmail.com', role: 'Patient', joinDate: '1 day ago', status: 'Active' },
-    { name: 'Dr. Rajesh Kumar', email: 'rajesh.kumar@kimshospital.com', role: 'Doctor', joinDate: '1 day ago', status: 'Active' },
-    { name: 'Priya Patel', email: 'priya.patel@gmail.com', role: 'Patient', joinDate: '2 days ago', status: 'Active' },
-    { name: 'Dr. Anjali Desai', email: 'anjali.desai@rameshhospital.com', role: 'Doctor', joinDate: '3 days ago', status: 'Active' },
-    { name: 'Arjun Singh', email: 'arjun.singh@gmail.com', role: 'Patient', joinDate: '3 days ago', status: 'Active' },
-    { name: 'Dr. Arjun Mehta', email: 'arjun.mehta@manipalhospital.com', role: 'Doctor', joinDate: '4 days ago', status: 'Active' },
-    { name: 'Vikram Nair', email: 'vikram.nair@gmail.com', role: 'Patient', joinDate: '5 days ago', status: 'Active' },
-    { name: 'Kavya Reddy', email: 'kavya.reddy@gmail.com', role: 'Patient', joinDate: '1 week ago', status: 'Active' }
-  ]
+  const recentUsers = users
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 10)
+    .map(user => ({
+      name: user.name,
+      email: user.email,
+      role: user.role.charAt(0).toUpperCase() + user.role.slice(1),
+      joinDate: format(new Date(user.createdAt), 'MMM dd, yyyy'),
+      status: 'Active'
+    }))
 
   const systemAlerts = [
-    { type: 'warning', message: '3 appointments pending confirmation', time: '10 mins ago' },
-    { type: 'info', message: 'System backup completed successfully', time: '1 hour ago' },
-    { type: 'success', message: '15 new medicine entries added to blockchain', time: '2 hours ago' },
-    { type: 'warning', message: 'Server load at 75%', time: '3 hours ago' }
+    { 
+      type: 'warning', 
+      message: `${appointments.filter(apt => apt.status === 'pending').length} appointments pending confirmation`, 
+      time: '10 mins ago' 
+    },
+    { 
+      type: 'info', 
+      message: 'System running normally', 
+      time: '1 hour ago' 
+    },
+    { 
+      type: 'success', 
+      message: `${medicines.length} medicines tracked in system`, 
+      time: '2 hours ago' 
+    },
+    { 
+      type: 'info', 
+      message: `${notifications.length} total notifications in system`, 
+      time: '3 hours ago' 
+    }
   ]
 
   const quickStats = [
-    { label: 'Active Doctors', value: '523', color: 'text-green-600' },
-    { label: 'Active Patients', value: '12,322', color: 'text-blue-600' },
-    { label: 'Pending Verifications', value: '47', color: 'text-orange-600' },
-    { label: 'Support Tickets', value: '12', color: 'text-red-600' }
+    { label: 'Active Doctors', value: users.filter(u => u.role === 'doctor').length.toString(), color: 'text-green-600' },
+    { label: 'Active Patients', value: users.filter(u => u.role === 'patient').length.toString(), color: 'text-blue-600' },
+    { label: 'Pending Appointments', value: appointments.filter(apt => apt.status === 'pending').length.toString(), color: 'text-orange-600' },
+    { label: 'Urgent Cases', value: appointments.filter(apt => apt.urgency === 'urgent').length.toString(), color: 'text-red-600' }
   ]
 
   return (
