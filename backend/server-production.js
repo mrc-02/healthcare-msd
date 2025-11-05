@@ -102,6 +102,10 @@ connectDB().catch(err => {
   console.log('ℹ️ Continuing without database connection')
 })
 
+// Serve static files from frontend build FIRST
+const frontendPath = path.join(__dirname, '../frontend/dist')
+app.use(express.static(frontendPath))
+
 // API routes
 app.use('/api', demoRoutes)  // Demo routes first
 
@@ -119,8 +123,8 @@ app.use('/api/notifications', limiter, notificationRoutes)
 // Database error handler
 app.use(handleDBError)
 
-// Root route
-app.get('/', (req, res) => {
+// API root route
+app.get('/api', (req, res) => {
   res.json({
     message: 'Healthcare Management System API',
     status: 'running',
@@ -150,10 +154,6 @@ app.get('/api/health', (req, res) => {
 // Error handler
 app.use(errorHandler)
 
-// Serve static files from frontend build
-const frontendPath = path.join(__dirname, '../frontend/dist')
-app.use(express.static(frontendPath))
-
 // Catch all handler: send back React's index.html file for all non-API routes
 app.get('*', (req, res) => {
   // Don't serve index.html for API routes
@@ -164,6 +164,7 @@ app.get('*', (req, res) => {
     })
   }
   
+  const frontendPath = path.join(__dirname, '../frontend/dist')
   res.sendFile(path.join(frontendPath, 'index.html'))
 })
 
