@@ -25,6 +25,9 @@ const app = express()
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
+// Trust proxy for Render deployment
+app.set('trust proxy', 1)
+
 // Security middleware
 app.use(helmet({
   contentSecurityPolicy: false,
