@@ -5,6 +5,7 @@ import User from '../models/User.js'
 import { authenticateToken, authorizeRoles } from '../middleware/auth.js'
 import { validateRequest, validateUserRegistration, validateUserLogin } from '../middleware/validation.js'
 import { findUserByEmail, addMockUser, generateMockToken } from '../middleware/mockAuth.js'
+import { sendWelcomeEmail } from '../utils/emailService.js'
 
 const router = express.Router()
 
@@ -137,6 +138,17 @@ router.post('/register', async (req, res, next) => {
     await user.save()
 
     const token = generateToken(user._id)
+
+    // Send welcome email
+    try {
+      await sendWelcomeEmail(user.email, {
+        name: user.name,
+        email: user.email,
+        role: user.role
+      })
+    } catch (emailError) {
+      console.error('Welcome email sending failed:', emailError)
+    }
 
     res.status(201).json({
       success: true,
