@@ -119,6 +119,15 @@ app.use('/api/notifications', limiter, notificationRoutes)
 // Database error handler
 app.use(handleDBError)
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Healthcare Management System API',
+    status: 'running',
+    timestamp: new Date().toISOString()
+  })
+})
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   const isConnected = mongoose.connection.readyState === 1
@@ -141,35 +150,45 @@ app.get('/api/health', (req, res) => {
 // Error handler
 app.use(errorHandler)
 
-// Only start server if not in Vercel serverless environment
-// Vercel will handle the serverless function execution
-if (process.env.VERCEL !== '1') {
-  // Serve static files from frontend build
-  const frontendPath = path.join(__dirname, '../frontend/dist')
-  app.use(express.static(frontendPath))
+// Serve static files from frontend build
+const frontendPath = path.join(__dirname, '../frontend/dist')
+app.use(express.static(frontendPath))
 
-  // Catch all handler: send back React's index.html file for all non-API routes
-  app.get('*', (req, res) => {
-    // Don't serve index.html for API routes
-    if (req.path.startsWith('/api/')) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Route not found' 
-      })
-    }
-    
-    res.sendFile(path.join(frontendPath, 'index.html'))
-  })
+// Catch all handler: send back React's index.html file for all non-API routes
+app.get('*', (req, res) => {
+  // Don't serve index.html for API routes
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ 
+      success: false, 
+      message: 'Route not found' 
+    })
+  }
+  
+  res.sendFile(path.join(frontendPath, 'index.html'))
+})
 
-  const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 10000
 
-  app.listen(PORT, '0.0.0.0', () => {
-    const isConnected = mongoose.connection.readyState === 1
-    console.log(`🚀 Server running on port ${PORT}`)
-    console.log(`📡 Environment: ${process.env.NODE_ENV || 'production'}`)
-    console.log(`🗄️  Database: ${isConnected ? 'Connected' : 'Demo Mode'}`)
-  })
-}
+app.listen(PORT, '0.0.0.0', () => {
+  const isConnected = mongoose.connection.readyState === 1
+  console.log(`🚀 Server running on port ${PORT}`)
+  console.log(`📡 Environment: ${process.env.NODE_ENV || 'production'}`)
+  console.log(`🗄️  Database: ${isConnected ? 'Connected' : 'Demo Mode'}`)
+}).on('error', (err) => {
+  console.error('❌ Server startup error:', err)
+  process.exit(1)
+})
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err)
+  process.exit(1)
+})
+
+process.on('unhandledRejection', (err) => {
+  console.error('❌ Unhandled Rejection:', err)
+  process.exit(1)
+})
 
 export default app
 
