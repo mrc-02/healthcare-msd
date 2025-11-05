@@ -32,6 +32,7 @@ const DoctorDashboard = () => {
     followUpRequired: 0,
     emergencyCases: 0
   })
+  const [isFirstLoad, setIsFirstLoad] = useState(true)
   const appointments = appointmentsData?.data?.appointments || []
   const notifications = notificationsData?.data?.notifications || []
   const patients = patientsData?.data?.users || []
@@ -119,8 +120,30 @@ const DoctorDashboard = () => {
     }
   }, [user])
 
-  // Simulate live stats updates
+  // Initialize metrics on first load
   useEffect(() => {
+    if (isFirstLoad) {
+      // Keep metrics at 0 for first login
+      setLivePatientMetrics({
+        activePatients: 0,
+        newPatients: 0,
+        followUpRequired: 0,
+        emergencyCases: 0
+      })
+      
+      // Set flag to false after 5 seconds to start live updates
+      const timer = setTimeout(() => {
+        setIsFirstLoad(false)
+      }, 5000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [isFirstLoad])
+
+  // Simulate live stats updates (only after first load)
+  useEffect(() => {
+    if (isFirstLoad) return
+    
     const interval = setInterval(() => {
       setLiveStats(prev => ({
         ...prev,
@@ -143,7 +166,7 @@ const DoctorDashboard = () => {
     }, 10000) // Update every 10 seconds
 
     return () => clearInterval(interval)
-  }, [appointments, patients])
+  }, [appointments, patients, isFirstLoad])
 
   const addRealtimeUpdate = (message) => {
     setRealtimeUpdates(prev => [

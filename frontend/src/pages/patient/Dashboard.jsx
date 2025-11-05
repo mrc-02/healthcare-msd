@@ -17,17 +17,17 @@ const PatientDashboard = () => {
   
   const [currentTime, setCurrentTime] = useState(new Date())
   const [liveStats, setLiveStats] = useState({
-    heartRate: 72,
-    bloodPressure: '120/80',
-    temperature: 98.6,
-    oxygenLevel: 98,
-    steps: 8542,
-    calories: 2100,
-    sleepHours: 7.5,
-    waterIntake: 6
+    heartRate: 0,
+    bloodPressure: '0/0',
+    temperature: 0,
+    oxygenLevel: 0,
+    steps: 0,
+    calories: 0,
+    sleepHours: 0,
+    waterIntake: 0
   })
   const [realtimeUpdates, setRealtimeUpdates] = useState([])
-
+  const [isFirstLoad, setIsFirstLoad] = useState(true)
   const [mergedAppointments, setMergedAppointments] = useState([])
 
   const appointments = appointmentsData?.data?.appointments || []
@@ -167,8 +167,34 @@ const PatientDashboard = () => {
     }
   }, [user])
 
-  // Simulate live health metrics
+  // Initialize metrics on first load
   useEffect(() => {
+    if (isFirstLoad) {
+      // Keep metrics at 0 for first login
+      setLiveStats({
+        heartRate: 0,
+        bloodPressure: '0/0',
+        temperature: 0,
+        oxygenLevel: 0,
+        steps: 0,
+        calories: 0,
+        sleepHours: 0,
+        waterIntake: 0
+      })
+      
+      // Set flag to false after 5 seconds to start live updates
+      const timer = setTimeout(() => {
+        setIsFirstLoad(false)
+      }, 5000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [isFirstLoad])
+
+  // Simulate live health metrics (only after first load)
+  useEffect(() => {
+    if (isFirstLoad) return
+    
     const interval = setInterval(() => {
       setLiveStats(prev => ({
         ...prev,
@@ -182,7 +208,7 @@ const PatientDashboard = () => {
     }, 5000) // Update every 5 seconds
 
     return () => clearInterval(interval)
-  }, [])
+  }, [isFirstLoad])
 
   const addRealtimeUpdate = (message) => {
     setRealtimeUpdates(prev => [
