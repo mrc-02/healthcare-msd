@@ -1,0 +1,47 @@
+{
+  "name": "healthcare-management-system",
+  "version": "1.0.0",
+  "description": "Full-stack Healthcare Management System with React frontend and Node.js backend",
+  "main": "backend/server-production.js",
+  "type": "module",
+  "scripts": {
+    "build": "cd frontend && npm run build",
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "build:backend": "cd backend && npm install",
+    "build:all": "npm run build:frontend && npm run build:backend",
+    "start": "node backend/server-production.js",
+    "start:railway": "node backend/server-railway.js",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "deploy:railway": "railway up"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^8.0.3",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express-validator": "^7.0.1",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.7",
+    "uuid": "^9.0.1",
+    "socket.io": "^4.7.4"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "healthcare",
+    "react",
+    "nodejs",
+    "mongodb",
+    "fullstack"
+  ],
+  "author": "Healthcare Team",
+  "license": "MIT"
+}
