@@ -1,7 +1,25 @@
 import express from 'express'
-import { sendWelcomeEmail, sendAppointmentConfirmation } from '../utils/emailService.js'
+import { sendWelcomeEmail, sendAppointmentConfirmation, testEmailConfig } from '../utils/emailService.js'
 
 const router = express.Router()
+
+// Test email configuration
+router.get('/email-config', async (req, res) => {
+  try {
+    const result = await testEmailConfig()
+    res.json({
+      success: true,
+      message: 'Email configuration is valid',
+      result
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Email configuration failed',
+      error: error.message
+    })
+  }
+})
 
 // Test email endpoint
 router.post('/email', async (req, res) => {

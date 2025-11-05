@@ -19,4 +19,4 @@ services:
       - key: EMAIL_USER
         value: 231fa04f98@gmail.com
       - key: EMAIL_PASS
-        value: xdcn fgvb iweg tcxl
+        value: xdcnfgvbiegtcxl

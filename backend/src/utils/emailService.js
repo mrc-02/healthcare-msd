@@ -1,17 +1,32 @@
 import nodemailer from 'nodemailer'
 
+// Test email configuration
+export const testEmailConfig = async () => {
+  try {
+    const transporter = nodemailer.createTransporter({
+      service: 'gmail',
+      auth: {
+        user: '231fa04f98@gmail.com',
+        pass: 'xdcnfgvbiegtcxl'
+      }
+    })
+    
+    const result = await transporter.verify()
+    console.log('Email configuration is valid:', result)
+    return result
+  } catch (error) {
+    console.error('Email configuration error:', error)
+    throw error
+  }
+}
+
 // Create transporter
 const createTransporter = () => {
   return nodemailer.createTransporter({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
+    service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER || '231fa04f98@gmail.com',
-      pass: process.env.EMAIL_PASS || 'xdcn fgvb iweg tcxl'
-    },
-    tls: {
-      rejectUnauthorized: false
+      user: '231fa04f98@gmail.com',
+      pass: 'xdcnfgvbiegtcxl' // App password without spaces
     }
   })
 }
@@ -28,7 +43,7 @@ export const sendAppointmentConfirmation = async (patientEmail, appointmentData)
     const transporter = createTransporter()
     
     const mailOptions = {
-      from: process.env.EMAIL_USER || '231fa04f98@gmail.com',
+      from: '231fa04f98@gmail.com',
       to: patientEmail,
       subject: 'Appointment Confirmation - Healthcare Management System',
       html: `
@@ -161,7 +176,7 @@ export const sendWelcomeEmail = async (userEmail, userData) => {
     const transporter = createTransporter()
     
     const mailOptions = {
-      from: process.env.EMAIL_USER || '231fa04f98@gmail.com',
+      from: '231fa04f98@gmail.com',
       to: userEmail,
       subject: 'Welcome to Healthcare Management System',
       html: `
