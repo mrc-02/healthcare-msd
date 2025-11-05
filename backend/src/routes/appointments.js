@@ -4,6 +4,7 @@ import User from '../models/User.js'
 import Notification from '../models/Notification.js'
 import { authenticateToken, authorizeRoles } from '../middleware/auth.js'
 import { validateRequest, validateAppointment, validateAppointmentUpdate, validateObjectId, validatePagination } from '../middleware/validation.js'
+import { sendAppointmentConfirmation, sendAppointmentCancellation, sendAppointmentStatusUpdate } from '../utils/emailService.js'
 
 const router = express.Router()
 
@@ -165,6 +166,21 @@ router.post('/', authenticateToken, validateAppointment, validateRequest, async 
       metadata: { appointmentId: appointment._id }
     })
 
+    // Send confirmation email to patient
+    try {
+      await sendAppointmentConfirmation(appointment.patient.email, {
+        patientName: appointment.patient.name,
+        doctorName: appointment.doctor.name,
+        specialization: appointment.doctor.specialization,
+        date: appointment.date.toDateString(),
+        time: appointment.time,
+        symptoms: appointment.symptoms,
+        status: appointment.status
+      })
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError)
+    }
+
     res.status(201).json({
       success: true,
       message: 'Appointment created successfully',
@@ -226,6 +242,19 @@ router.put('/:id', authenticateToken, validateObjectId, validateAppointmentUpdat
         priority: 'medium',
         metadata: { appointmentId: appointment._id }
       })
+
+      // Send status update email
+      try {
+        await sendAppointmentStatusUpdate(updatedAppointment.patient.email, {
+          patientName: updatedAppointment.patient.name,
+          doctorName: updatedAppointment.doctor.name,
+          date: updatedAppointment.date.toDateString(),
+          time: updatedAppointment.time,
+          status: req.body.status
+        })
+      } catch (emailError) {
+        console.error('Email sending failed:', emailError)
+      }
     }
 
     res.json({
@@ -271,14 +300,20 @@ router.delete('/:id', authenticateToken, validateObjectId, validateRequest, asyn
       })
     }
 
+    // Populate appointment data before updating
+    await appointment.populate([
+      { path: 'patient', select: 'name email phone' },
+      { path: 'doctor', select: 'name email specialization' }
+    ])
+
     // Update status to cancelled instead of deleting
     appointment.status = 'cancelled'
     await appointment.save()
 
     // Create notification
-    const notifyUser = appointment.patient.toString() === req.user._id.toString() 
-      ? appointment.doctor 
-      : appointment.patient
+    const notifyUser = appointment.patient._id.toString() === req.user._id.toString() 
+      ? appointment.doctor._id 
+      : appointment.patient._id
 
     await Notification.create({
       user: notifyUser,
@@ -288,6 +323,18 @@ router.delete('/:id', authenticateToken, validateObjectId, validateRequest, asyn
       priority: 'medium',
       metadata: { appointmentId: appointment._id }
     })
+
+    // Send cancellation email to patient
+    try {
+      await sendAppointmentCancellation(appointment.patient.email, {
+        patientName: appointment.patient.name,
+        doctorName: appointment.doctor.name,
+        date: appointment.date.toDateString(),
+        time: appointment.time
+      })
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError)
+    }
 
     res.json({
       success: true,

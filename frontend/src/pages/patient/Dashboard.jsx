@@ -28,94 +28,12 @@ const PatientDashboard = () => {
   })
   const [realtimeUpdates, setRealtimeUpdates] = useState([])
   const [isFirstLoad, setIsFirstLoad] = useState(true)
-  const [mergedAppointments, setMergedAppointments] = useState([])
-
   const appointments = appointmentsData?.data?.appointments || []
   const notifications = notificationsData?.data?.notifications || []
   const medicines = medicinesData?.data?.medicines || []
 
-  // Merge local storage appointments with API appointments
-  useEffect(() => {
-    const mergeAppointments = () => {
-      try {
-        // Load from local storage
-        const localAppointments = JSON.parse(localStorage.getItem('localAppointments') || '[]')
-        
-        // Helper function to normalize date for comparison
-        const normalizeDate = (date) => {
-          if (!date) return ''
-          try {
-            const d = new Date(date)
-            return d.toISOString().split('T')[0] // YYYY-MM-DD
-          } catch {
-            return String(date).split('T')[0]
-          }
-        }
-
-        // Create a map of local appointments
-        const localAppointmentsMap = new Map()
-        localAppointments.forEach(apt => {
-          const normalizedDate = normalizeDate(apt.date)
-          const patientName = apt.patient?.name || ''
-          const time = apt.time || ''
-          const key = `${patientName}_${normalizedDate}_${time}`
-          if (key) {
-            localAppointmentsMap.set(key, apt)
-          }
-        })
-
-        // Merge API appointments with local data
-        const merged = (appointments || []).map(apiApt => {
-          const normalizedDate = normalizeDate(apiApt.date)
-          const patientName = apiApt.patient?.name || ''
-          const time = apiApt.time || ''
-          const key = `${patientName}_${normalizedDate}_${time}`
-          const localApt = localAppointmentsMap.get(key)
-          
-          // If local appointment exists, prefer it (has more details)
-          return localApt || apiApt
-        })
-
-        // Add local-only appointments
-        const apiAppointmentKeys = new Set(merged.map(apt => {
-          const normalizedDate = normalizeDate(apt.date)
-          const patientName = apt.patient?.name || ''
-          const time = apt.time || ''
-          return `${patientName}_${normalizedDate}_${time}`
-        }))
-
-        localAppointments.forEach(localApt => {
-          const normalizedDate = normalizeDate(localApt.date)
-          const patientName = localApt.patient?.name || ''
-          const time = localApt.time || ''
-          const key = `${patientName}_${normalizedDate}_${time}`
-          
-          // Check if this appointment belongs to current user
-          const patientId = localApt.patient?._id || localApt.patient?.id
-          const userId = user?._id || user?.id
-          
-          if (key && !apiAppointmentKeys.has(key) && patientId === userId) {
-            merged.push(localApt)
-          }
-        })
-
-        // Only update if appointments actually changed to prevent infinite loops
-        setMergedAppointments(prev => {
-          const prevStr = JSON.stringify(prev)
-          const mergedStr = JSON.stringify(merged)
-          return prevStr === mergedStr ? prev : merged
-        })
-      } catch (error) {
-        console.error('Error merging appointments:', error)
-        setMergedAppointments(appointments || [])
-      }
-    }
-
-    mergeAppointments()
-  }, [appointments?.length, user?._id || user?.id])
-
   // Safe data access helpers
-  const safeAppointments = Array.isArray(mergedAppointments) ? mergedAppointments : []
+  const safeAppointments = Array.isArray(appointments) ? appointments : []
   const safeNotifications = Array.isArray(notifications) ? notifications : []
   const safeMedicines = Array.isArray(medicines) ? medicines : []
 
