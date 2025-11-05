@@ -13,7 +13,7 @@ const emailConfig = {
 export const testEmailConfig = async () => {
   try {
     console.log('Testing email config with nodemailer version:', nodemailer.version || 'unknown')
-    const transporter = nodemailer.createTransporter(emailConfig)
+    const transporter = nodemailer.createTransport(emailConfig)
     const result = await transporter.verify()
     console.log('Email configuration is valid:', result)
     return result
@@ -32,7 +32,7 @@ export const sendAppointmentConfirmation = async (patientEmail, appointmentData)
       throw new Error('Missing email or appointment data')
     }
     
-    const transporter = nodemailer.createTransporter(emailConfig)
+    const transporter = nodemailer.createTransport(emailConfig)
     
     const mailOptions = {
       from: '231fa04f98@gmail.com',
@@ -76,13 +76,63 @@ export const sendAppointmentConfirmation = async (patientEmail, appointmentData)
   }
 }
 
+// Send welcome email after registration
+export const sendWelcomeEmail = async (userEmail, userData) => {
+  try {
+    console.log('Attempting to send welcome email to:', userEmail)
+    
+    if (!userEmail || !userData) {
+      throw new Error('Missing email or user data')
+    }
+    
+    const transporter = nodemailer.createTransport(emailConfig)
+    
+    const mailOptions = {
+      from: '231fa04f98@gmail.com',
+      to: userEmail,
+      subject: 'Welcome to Healthcare Management System',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2563eb;">Welcome to Healthcare Management System!</h2>
+          <p>Dear ${userData.name},</p>
+          <p>Thank you for registering with our Healthcare Management System. Your account has been successfully created.</p>
+          
+          <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: #374151;">Account Details</h3>
+            <p><strong>Name:</strong> ${userData.name}</p>
+            <p><strong>Email:</strong> ${userData.email}</p>
+            <p><strong>Role:</strong> ${userData.role.charAt(0).toUpperCase() + userData.role.slice(1)}</p>
+            <p><strong>Registration Date:</strong> ${new Date().toDateString()}</p>
+          </div>
+          
+          <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+          
+          <p>Best regards,<br>Healthcare Management System Team</p>
+        </div>
+      `
+    }
+
+    const result = await transporter.sendMail(mailOptions)
+    console.log('Welcome email sent successfully:', result.messageId)
+    return result
+  } catch (error) {
+    console.error('Error sending welcome email:', {
+      error: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response
+    })
+    throw error
+  }
+}
+
 // Send appointment cancellation email
 export const sendAppointmentCancellation = async (patientEmail, appointmentData) => {
   try {
-    const transporter = nodemailer.createTransporter(emailConfig)
+    const transporter = nodemailer.createTransport(emailConfig)
     
     const mailOptions = {
-      from: process.env.EMAIL_USER || '231fa04f98@gmail.com',
+      from: '231fa04f98@gmail.com',
       to: patientEmail,
       subject: 'Appointment Cancelled - Healthcare Management System',
       html: `
@@ -115,7 +165,7 @@ export const sendAppointmentCancellation = async (patientEmail, appointmentData)
 // Send appointment status update email
 export const sendAppointmentStatusUpdate = async (patientEmail, appointmentData) => {
   try {
-    const transporter = nodemailer.createTransporter(emailConfig)
+    const transporter = nodemailer.createTransport(emailConfig)
     
     const statusColors = {
       confirmed: '#059669',
@@ -125,8 +175,8 @@ export const sendAppointmentStatusUpdate = async (patientEmail, appointmentData)
     }
     
     const mailOptions = {
-      from: process.env.EMAIL_USER || '231fa04f98@gmail.com',
-      to: patientEmail,
+      from: '231fa04f98@gmail.com',
+      to: userEmail,
       subject: 'Appointment Status Update - Healthcare Management System',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -153,82 +203,5 @@ export const sendAppointmentStatusUpdate = async (patientEmail, appointmentData)
     console.log('Appointment status update email sent successfully')
   } catch (error) {
     console.error('Error sending appointment status update email:', error)
-  }
-}
-
-// Send welcome email after registration
-export const sendWelcomeEmail = async (userEmail, userData) => {
-  try {
-    console.log('Attempting to send welcome email to:', userEmail)
-    console.log('Nodemailer object:', typeof nodemailer, Object.keys(nodemailer))
-    
-    if (!userEmail || !userData) {
-      throw new Error('Missing email or user data')
-    }
-    
-    const transporter = nodemailer.createTransporter(emailConfig)
-    
-    const mailOptions = {
-      from: '231fa04f98@gmail.com',
-      to: userEmail,
-      subject: 'Welcome to Healthcare Management System',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2563eb;">Welcome to Healthcare Management System!</h2>
-          <p>Dear ${userData.name},</p>
-          <p>Thank you for registering with our Healthcare Management System. Your account has been successfully created.</p>
-          
-          <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="margin-top: 0; color: #374151;">Account Details</h3>
-            <p><strong>Name:</strong> ${userData.name}</p>
-            <p><strong>Email:</strong> ${userData.email}</p>
-            <p><strong>Role:</strong> ${userData.role.charAt(0).toUpperCase() + userData.role.slice(1)}</p>
-            <p><strong>Registration Date:</strong> ${new Date().toDateString()}</p>
-          </div>
-          
-          <div style="background-color: #dbeafe; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="margin-top: 0; color: #1e40af;">What's Next?</h3>
-            ${userData.role === 'patient' ? `
-              <ul>
-                <li>Complete your profile with medical history</li>
-                <li>Book your first appointment with our qualified doctors</li>
-                <li>Track your health metrics and medications</li>
-                <li>Access our AI-powered symptom checker</li>
-              </ul>
-            ` : userData.role === 'doctor' ? `
-              <ul>
-                <li>Complete your professional profile</li>
-                <li>Set your availability schedule</li>
-                <li>Start managing patient appointments</li>
-                <li>Access patient communication tools</li>
-              </ul>
-            ` : `
-              <ul>
-                <li>Access the admin dashboard</li>
-                <li>Manage users and appointments</li>
-                <li>Monitor system analytics</li>
-                <li>Configure system settings</li>
-              </ul>
-            `}
-          </div>
-          
-          <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
-          
-          <p>Best regards,<br>Healthcare Management System Team</p>
-        </div>
-      `
-    }
-
-    const result = await transporter.sendMail(mailOptions)
-    console.log('Welcome email sent successfully:', result.messageId)
-    return result
-  } catch (error) {
-    console.error('Error sending welcome email:', {
-      error: error.message,
-      code: error.code,
-      command: error.command,
-      response: error.response
-    })
-    throw error
   }
 }
