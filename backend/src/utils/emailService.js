@@ -5,7 +5,7 @@ const emailConfig = {
   service: "gmail",
   auth: {
     user: "231fa04f98@gmail.com",
-    pass: "fxao zkvi nobu bkqy",
+    pass: "fxaozkvinobubkqy",
   },
   tls: {
     rejectUnauthorized: false,
@@ -14,6 +14,15 @@ const emailConfig = {
 
 // Create transporter
 const transporter = nodemailer.createTransport(emailConfig);
+
+// Test connection on startup
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('❌ Email service connection failed:', error.message);
+  } else {
+    console.log('✅ Email service ready to send emails');
+  }
+});
 
 // Test email config
 export const testEmailConfig = async () => {
@@ -28,6 +37,8 @@ export const testEmailConfig = async () => {
 // Send welcome email
 export const sendWelcomeEmail = async (userEmail, userData) => {
   try {
+    console.log('📧 Attempting to send welcome email to:', userEmail);
+    
     const mailOptions = {
       from: `"Healthcare Team" <${emailConfig.auth.user}>`,
       to: userEmail,
@@ -36,15 +47,25 @@ export const sendWelcomeEmail = async (userEmail, userData) => {
     };
 
     const res = await transporter.sendMail(mailOptions);
-    console.log("✅ Welcome email sent:", res.messageId);
+    console.log("✅ Welcome email sent successfully:", res.messageId);
+    return res;
   } catch (error) {
-    console.error("❌ Error sending welcome email:", error.message);
+    console.error("❌ Welcome email failed:", {
+      error: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      to: userEmail
+    });
+    throw error;
   }
 };
 
 // Send appointment confirmation
 export const sendAppointmentConfirmation = async (patientEmail) => {
   try {
+    console.log('📧 Attempting to send appointment email to:', patientEmail);
+    
     const mailOptions = {
       from: `"Healthcare Team" <${emailConfig.auth.user}>`,
       to: patientEmail,
@@ -53,9 +74,17 @@ export const sendAppointmentConfirmation = async (patientEmail) => {
     };
 
     const res = await transporter.sendMail(mailOptions);
-    console.log("✅ Appointment email sent:", res.messageId);
+    console.log("✅ Appointment email sent successfully:", res.messageId);
+    return res;
   } catch (error) {
-    console.error("❌ Error sending appointment email:", error.message);
+    console.error("❌ Appointment email failed:", {
+      error: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      to: patientEmail
+    });
+    throw error;
   }
 };
 
